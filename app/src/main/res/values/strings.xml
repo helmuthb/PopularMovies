@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+    <string name="error_loading_movies">Error loading movies.</string>
+    <string name="button_retry">Retry</string>
+    <string-array name="sort_order">
+        <item name="by_popularity">Sort by Popularity</item>
+        <item name="by_rating">Sort by Rating</item>
+    </string-array>
+</resources>
