@@ -18,6 +18,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            app:contentScrim="@color/colorPrimary"
+            app:theme="@style/Theme.AppCompat"
             android:fitsSystemWindows="true">
 
             <ImageView
@@ -25,7 +27,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                app:layout_collapseMode="pin"
+                app:layout_collapseMode="parallax"
                 tools:contentDescription="Logan"
                 android:contentDescription="@string/app_name"
                 />

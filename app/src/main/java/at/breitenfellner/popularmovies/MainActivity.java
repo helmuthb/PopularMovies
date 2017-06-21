@@ -117,6 +117,12 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     }
 
     private void fetchMoviesAndShow(int sortOrder) {
+        if (mMovieList == null) {
+            mViewMovieList.setVisibility(View.GONE);
+            mButtonErrorRetry.setVisibility(View.GONE);
+            mViewErrorText.setVisibility(View.GONE);
+            mViewPleaseWait.setVisibility(View.VISIBLE);
+        }
         fetchMoviesObservable(sortOrder)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())

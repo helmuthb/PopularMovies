@@ -2,6 +2,7 @@ package at.breitenfellner.popularmovies;
 
 import android.content.Intent;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;

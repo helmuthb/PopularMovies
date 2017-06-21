@@ -62,7 +62,6 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
         void bind(int listIndex) {
             Movie theMovie = mMovieList.movies.get(listIndex);
-            // String baseUrl = "http://image.tmdb.org/t/p/w342";
             Context ctx = moviePoster.getContext();
             String baseUrl = ctx.getResources().getString(R.string.tmdb_image_baseurl_small);
             Picasso.with(ctx)
