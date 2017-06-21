@@ -16,11 +16,13 @@ import butterknife.ButterKnife;
 
 /**
  * Created by helmuth on 17/06/2017.
+ *
+ * This is an Adapter class for a RecyclerView, allowing to display posters from movies.
  */
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
-    MovieList mMovieList;
-    MovieClickListener mClickListener;
+    private MovieList mMovieList;
+    private MovieClickListener mClickListener;
 
     public MovieAdapter(MovieList movies, MovieClickListener clickListener)
     {
@@ -51,7 +53,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @BindView(R.id.movie_poster) ImageView moviePoster;
-        public MovieViewHolder(View itemView) {
+        MovieViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
             itemView.setOnClickListener(this);
@@ -60,7 +62,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         void bind(int listIndex) {
             String baseUrl = "http://image.tmdb.org/t/p/w185";
             Picasso.with(moviePoster.getContext())
-                   .load(baseUrl + mMovieList.movies.get(listIndex).poster_path)
+                   .load(baseUrl + mMovieList.movies.get(listIndex).posterPath)
                    .into(moviePoster);
         }
 

@@ -1,6 +1,7 @@
 package at.breitenfellner.popularmovies;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.ImageView;
@@ -15,10 +16,10 @@ import icepick.State;
 
 public class MovieDetails extends AppCompatActivity {
 
-    @BindView(R.id.movie_details_release_date) TextView mReleaseDate;
-    @BindView(R.id.movie_details_vote_average) TextView mVoteAverage;
-    @BindView(R.id.movie_details_plot) TextView mPlot;
-    @BindView(R.id.movie_details_poster) ImageView mPoster;
+    @BindView(R.id.movie_details_release_date) TextView mViewReleaseDate;
+    @BindView(R.id.movie_details_vote_average) TextView mViewVoteAverage;
+    @BindView(R.id.movie_details_plot) TextView mViewPlot;
+    @BindView(R.id.movie_details_poster) ImageView mViewPoster;
     @State Movie mMovie;
 
     @Override
@@ -33,13 +34,14 @@ public class MovieDetails extends AppCompatActivity {
             mMovie = (Movie)data.getSerializableExtra(Movie.class.getName());
             // show the data ...
             setTitle(mMovie.title);
-            mReleaseDate.setText("Release date: " + mMovie.release_date);
-            mPlot.setText(mMovie.overview);
-            mVoteAverage.setText("Average rating: " + mMovie.vote_average);
+            Resources res = getResources();
+            mViewReleaseDate.setText(res.getString(R.string.release_date, mMovie.releaseDate));
+            mViewVoteAverage.setText(res.getString(R.string.average_rating, mMovie.voteAverage));
+            mViewPlot.setText(mMovie.overview);
             String baseUrl = "http://image.tmdb.org/t/p/w780";
             Picasso.with(this)
-                    .load(baseUrl + mMovie.poster_path)
-                    .into(mPoster);
+                    .load(baseUrl + mMovie.posterPath)
+                    .into(mViewPoster);
         }
     }
 }

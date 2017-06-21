@@ -42,11 +42,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     final static int SORTORDER_POPULARITY = 0;
     final static int SORTORDER_RATING = 1;
 
-    @BindView(R.id.sort_order) Spinner sort_order;
-    @BindView(R.id.progress_bar) ProgressBar please_wait;
-    @BindView(R.id.movie_list) RecyclerView movie_list;
-    @BindView(R.id.error_retry) Button error_retry;
-    @BindView(R.id.error_text) TextView error_text;
+    @BindView(R.id.sort_order) Spinner mViewSortOrder;
+    @BindView(R.id.progress_bar) ProgressBar mViewPleaseWait;
+    @BindView(R.id.movie_list) RecyclerView mViewMovieList;
+    @BindView(R.id.error_retry) Button mButtonErrorRetry;
+    @BindView(R.id.error_text) TextView mViewErrorText;
     MovieService movieService = null;
     MovieAdapter mAdapter;
     @State MovieList mMovieList;
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 android.R.layout.simple_spinner_item
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        sort_order.setAdapter(adapter);
+        mViewSortOrder.setAdapter(adapter);
         // connect with API
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("http://api.themoviedb.org/")
@@ -74,17 +74,17 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         movieService = retrofit.create(MovieService.class);
         // prepare recycler view
         RecyclerView.LayoutManager layout = new GridLayoutManager(this, 4);
-        movie_list.setLayoutManager(layout);
+        mViewMovieList.setLayoutManager(layout);
         // fetch and show movies
         fetchMoviesAndShow(mSortOrder);
-        error_retry.setOnClickListener(new View.OnClickListener() {
+        mButtonErrorRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 fetchMoviesAndShow(mSortOrder);
             }
         });
         // react on change of sort order
-        sort_order.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        mViewSortOrder.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (mSortOrder != position) {
@@ -130,26 +130,26 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                             // ignore - we have old valid data
                             return;
                         }
-                        movie_list.setVisibility(View.GONE);
-                        please_wait.setVisibility(View.GONE);
+                        mViewMovieList.setVisibility(View.GONE);
+                        mViewPleaseWait.setVisibility(View.GONE);
                         if (e.getClass() == IllegalArgumentException.class) {
                             // nothing selected? clear error
-                            error_retry.setVisibility(View.GONE);
-                            error_text.setVisibility(View.GONE);
+                            mButtonErrorRetry.setVisibility(View.GONE);
+                            mViewErrorText.setVisibility(View.GONE);
                         }
                         else {
                             // network error? show options to reload
-                            error_retry.setVisibility(View.VISIBLE);
-                            error_text.setVisibility(View.VISIBLE);
+                            mButtonErrorRetry.setVisibility(View.VISIBLE);
+                            mViewErrorText.setVisibility(View.VISIBLE);
                         }
                     }
 
                     @Override
                     public void onComplete() {
-                        please_wait.setVisibility(View.GONE);
-                        movie_list.setVisibility(View.VISIBLE);
-                        error_retry.setVisibility(View.GONE);
-                        error_text.setVisibility(View.GONE);
+                        mViewPleaseWait.setVisibility(View.GONE);
+                        mViewMovieList.setVisibility(View.VISIBLE);
+                        mButtonErrorRetry.setVisibility(View.GONE);
+                        mViewErrorText.setVisibility(View.GONE);
                         showMovies();
                     }
                 });
@@ -158,21 +158,25 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private void showMovies() {
         if (mMovieList != null) {
             mAdapter = new MovieAdapter(mMovieList, this);
-            movie_list.setAdapter(mAdapter);
-            movie_list.setVisibility(View.VISIBLE);
-            please_wait.setVisibility(View.GONE);
-            error_retry.setVisibility(View.GONE);
-            error_text.setVisibility(View.GONE);
+            mViewMovieList.setAdapter(mAdapter);
+            mViewMovieList.setVisibility(View.VISIBLE);
+            mViewPleaseWait.setVisibility(View.GONE);
+            mButtonErrorRetry.setVisibility(View.GONE);
+            mViewErrorText.setVisibility(View.GONE);
         }
     }
 
     private MovieList fetchMovies(int sortOrder) throws IOException {
         Call<MovieList> moviesRequest;
         if (sortOrder == SORTORDER_POPULARITY) {
-            moviesRequest = movieService.popular(BuildConfig.THEMOVIEDB_KEY);
+            moviesRequest = movieService.getMovies(
+                    MovieService.SORT_POPULARITY,
+                    BuildConfig.THEMOVIEDB_KEY);
         }
         else if (sortOrder == SORTORDER_RATING) {
-            moviesRequest = movieService.topRated(BuildConfig.THEMOVIEDB_KEY);
+            moviesRequest = movieService.getMovies(
+                    MovieService.SORT_RATING,
+                    BuildConfig.THEMOVIEDB_KEY);
         }
         else {
             // The string here is never raised to the UI and needs not to be put into a resource
