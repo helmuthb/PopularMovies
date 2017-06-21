@@ -8,4 +8,6 @@
     </string-array>
     <string name="release_date">Release date: %1$s</string>
     <string name="average_rating">Average rating: %1$f</string>
+    <string name="tmdb_image_baseurl_large">http://image.tmdb.org/t/p/w780</string>
+    <string name="tmdb_image_baseurl_small">http://image.tmdb.org/t/p/w185</string>
 </resources>

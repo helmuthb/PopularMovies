@@ -45,7 +45,7 @@ public class MovieDetails extends AppCompatActivity {
             mViewReleaseDate.setText(res.getString(R.string.release_date, mMovie.releaseDate));
             mViewVoteAverage.setText(res.getString(R.string.average_rating, mMovie.voteAverage));
             mViewPlot.setText(mMovie.overview);
-            String baseUrl = "http://image.tmdb.org/t/p/w780";
+            String baseUrl = res.getString(R.string.tmdb_image_baseurl_large);
             Picasso.with(this)
                     .load(baseUrl + mMovie.posterPath)
                     .into(mViewPoster);
