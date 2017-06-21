@@ -15,18 +15,20 @@
         android:id="@+id/movie_details_release_date"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginLeft="@dimen/activity_half_padding"
+        android:layout_marginRight="@dimen/activity_half_padding"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginStart="@dimen/activity_half_padding"
+        android:layout_marginEnd="@dimen/activity_half_padding" />
 
     <ImageView
         android:id="@+id/movie_details_poster"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        tools:contentDescription="Logan"
+        android:contentDescription="@string/app_name"
         app:layout_constraintTop_toBottomOf="@+id/movie_details_release_date"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -36,24 +38,24 @@
         android:id="@+id/movie_details_vote_average"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginLeft="@dimen/activity_half_padding"
+        android:layout_marginRight="@dimen/activity_half_padding"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginStart="@dimen/activity_half_padding"
+        android:layout_marginEnd="@dimen/activity_half_padding"
         app:layout_constraintTop_toBottomOf="@+id/movie_details_poster"/>
 
     <TextView
         android:id="@+id/movie_details_plot"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginLeft="@dimen/activity_half_padding"
+        android:layout_marginRight="@dimen/activity_half_padding"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginStart="@dimen/activity_half_padding"
+        android:layout_marginEnd="@dimen/activity_half_padding"
         app:layout_constraintTop_toBottomOf="@+id/movie_details_vote_average"/>
 
 </android.support.constraint.ConstraintLayout>

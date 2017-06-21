@@ -17,8 +17,9 @@ import java.io.Serializable;
  *
  * To allow the object to be passed as Intent extra data it declares to be Serializable.
  * Another option would be to implement Parcelable, which could also be simplified with
- * using appropriate extensions. For this sample and to minimize code size using
- * Serializable has been chosen.
+ * using appropriate extensions. However, it is (currently) only one object at a time which is
+ * marshalled to show the details view - the performance overhead of Serializable can easily
+ * be ignored in this case.
  */
 
 public class Movie implements Serializable {

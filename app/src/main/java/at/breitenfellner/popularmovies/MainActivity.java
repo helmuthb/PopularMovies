@@ -73,7 +73,9 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 .build();
         movieService = retrofit.create(MovieService.class);
         // prepare recycler view
-        RecyclerView.LayoutManager layout = new GridLayoutManager(this, 4);
+        // number of columns from a resource -> adjustable by size of screen
+        int columns = getResources().getInteger(R.integer.columns);
+        RecyclerView.LayoutManager layout = new GridLayoutManager(this, columns);
         mViewMovieList.setLayoutManager(layout);
         // fetch and show movies
         fetchMoviesAndShow(mSortOrder);

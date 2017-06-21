@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 
 import at.breitenfellner.popularmovies.R;
+import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -60,10 +61,14 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         }
 
         void bind(int listIndex) {
-            String baseUrl = "http://image.tmdb.org/t/p/w185";
+            Movie theMovie = mMovieList.movies.get(listIndex);
+            // String baseUrl = "http://image.tmdb.org/t/p/w185";
+            String baseUrl = "http://image.tmdb.org/t/p/w342";
             Picasso.with(moviePoster.getContext())
-                   .load(baseUrl + mMovieList.movies.get(listIndex).posterPath)
+                   .load(baseUrl + theMovie.posterPath)
                    .into(moviePoster);
+            // set content description for accessibility
+            moviePoster.setContentDescription(theMovie.title);
         }
 
         @Override

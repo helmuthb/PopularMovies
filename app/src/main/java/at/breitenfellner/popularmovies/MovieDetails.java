@@ -42,6 +42,7 @@ public class MovieDetails extends AppCompatActivity {
             Picasso.with(this)
                     .load(baseUrl + mMovie.posterPath)
                     .into(mViewPoster);
+            mViewPoster.setContentDescription(mMovie.title);
         }
     }
 }
