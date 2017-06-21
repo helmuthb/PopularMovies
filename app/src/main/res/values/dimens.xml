@@ -4,5 +4,7 @@
     <dimen name="activity_padding">16dp</dimen>
     <dimen name="activity_half_padding">8dp</dimen>
     <dimen name="progressbar_size">48dp</dimen>
+    <dimen name="top_padding">24dp</dimen>
+    <dimen name="appbar_height">250dp</dimen>
     <integer name="columns">4</integer>
 </resources>

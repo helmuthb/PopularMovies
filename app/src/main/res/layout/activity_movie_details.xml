@@ -1,62 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
+<android.support.design.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context="at.breitenfellner.popularmovies.MovieDetails">
 
-<android.support.constraint.ConstraintLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    <android.support.design.widget.AppBarLayout
+        android:layout_height="@dimen/appbar_height"
+        android:layout_width="match_parent"
+        android:fitsSystemWindows="true">
 
-    <TextView
-        android:id="@+id/movie_details_release_date"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/activity_half_padding"
-        android:layout_marginRight="@dimen/activity_half_padding"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginStart="@dimen/activity_half_padding"
-        android:layout_marginEnd="@dimen/activity_half_padding" />
+        <android.support.design.widget.CollapsingToolbarLayout
+            android:id="@+id/movie_details_collapsing_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_scrollFlags="scroll|exitUntilCollapsed"
+            android:fitsSystemWindows="true">
 
-    <ImageView
-        android:id="@+id/movie_details_poster"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        tools:contentDescription="Logan"
-        android:contentDescription="@string/app_name"
-        app:layout_constraintTop_toBottomOf="@+id/movie_details_release_date"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        />
+            <ImageView
+                android:id="@+id/movie_details_poster"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop"
+                app:layout_collapseMode="pin"
+                tools:contentDescription="Logan"
+                android:contentDescription="@string/app_name"
+                />
 
-    <TextView
-        android:id="@+id/movie_details_vote_average"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/activity_half_padding"
-        android:layout_marginRight="@dimen/activity_half_padding"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginStart="@dimen/activity_half_padding"
-        android:layout_marginEnd="@dimen/activity_half_padding"
-        app:layout_constraintTop_toBottomOf="@+id/movie_details_poster"/>
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/movie_details_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                app:layout_collapseMode="parallax"
+                />
+        </android.support.design.widget.CollapsingToolbarLayout>
+    </android.support.design.widget.AppBarLayout>
 
-    <TextView
-        android:id="@+id/movie_details_plot"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/activity_half_padding"
-        android:layout_marginRight="@dimen/activity_half_padding"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginStart="@dimen/activity_half_padding"
-        android:layout_marginEnd="@dimen/activity_half_padding"
-        app:layout_constraintTop_toBottomOf="@+id/movie_details_vote_average"/>
+    <android.support.v4.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="fill_vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-</android.support.constraint.ConstraintLayout>
-</ScrollView>
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="@dimen/top_padding">
+
+            <TextView
+                android:id="@+id/movie_details_release_date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/activity_half_padding"
+                android:layout_marginRight="@dimen/activity_half_padding"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginStart="@dimen/activity_half_padding"
+                android:layout_marginEnd="@dimen/activity_half_padding" />
+
+            <TextView
+                android:id="@+id/movie_details_vote_average"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/activity_half_padding"
+                android:layout_marginRight="@dimen/activity_half_padding"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:layout_marginStart="@dimen/activity_half_padding"
+                android:layout_marginEnd="@dimen/activity_half_padding"
+                app:layout_constraintTop_toBottomOf="@+id/movie_details_release_date"/>
+
+            <TextView
+                android:id="@+id/movie_details_plot"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/activity_half_padding"
+                android:layout_marginRight="@dimen/activity_half_padding"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:layout_marginStart="@dimen/activity_half_padding"
+                android:layout_marginEnd="@dimen/activity_half_padding"
+                app:layout_constraintTop_toBottomOf="@+id/movie_details_vote_average"/>
+        </android.support.constraint.ConstraintLayout>
+    </android.support.v4.widget.NestedScrollView>
+</android.support.design.widget.CoordinatorLayout>

@@ -2,8 +2,10 @@ package at.breitenfellner.popularmovies;
 
 import android.content.Intent;
 import android.content.res.Resources;
+import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -20,6 +22,8 @@ public class MovieDetails extends AppCompatActivity {
     @BindView(R.id.movie_details_vote_average) TextView mViewVoteAverage;
     @BindView(R.id.movie_details_plot) TextView mViewPlot;
     @BindView(R.id.movie_details_poster) ImageView mViewPoster;
+    @BindView(R.id.movie_details_toolbar) Toolbar mToolbar;
+    @BindView(R.id.movie_details_collapsing_layout) CollapsingToolbarLayout mCollapsingLayout;
     @State Movie mMovie;
 
     @Override
@@ -27,6 +31,9 @@ public class MovieDetails extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
         ButterKnife.bind(this);
+        // set toolbar
+        setSupportActionBar(mToolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         // get intent data (if any)
         Intent data = getIntent();
         if (data.hasExtra(Movie.class.getName())) {
@@ -43,6 +50,7 @@ public class MovieDetails extends AppCompatActivity {
                     .load(baseUrl + mMovie.posterPath)
                     .into(mViewPoster);
             mViewPoster.setContentDescription(mMovie.title);
+            mCollapsingLayout.setTitle(mMovie.title);
         }
     }
 }
