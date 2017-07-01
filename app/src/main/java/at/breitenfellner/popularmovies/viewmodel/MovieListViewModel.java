@@ -5,12 +5,15 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.Observer;
+import android.content.Context;
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import at.breitenfellner.popularmovies.MovieRepository;
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
+import at.breitenfellner.popularmovies.view.MovieDetailsActivity;
 
 /**
  * This is the view model for a list of movies, where one can choose between
@@ -80,4 +83,19 @@ public class MovieListViewModel extends AndroidViewModel {
         }
         return null;
     }
+
+    /**
+     * Show the Movie details activity
+     * @param m Movie object to display
+     */
+    public void showMovie(Movie m) {
+        if (m != null) {
+            Intent detailsIntent = new Intent(getApplication(), MovieDetailsActivity.class);
+            // set details needed
+            detailsIntent.putExtra(Movie.class.getName(), m.id);
+            getApplication().startActivity(detailsIntent);
+        }
+    }
+
+
 }

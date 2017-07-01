@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="at.breitenfellner.popularmovies.MovieDetailsActivity">
+    tools:context="at.breitenfellner.popularmovies.view.MovieDetailsActivity">
 
     <android.support.design.widget.AppBarLayout
         android:layout_height="@dimen/appbar_height"
@@ -87,6 +87,56 @@
                 android:layout_marginStart="@dimen/activity_half_padding"
                 android:layout_marginEnd="@dimen/activity_half_padding"
                 app:layout_constraintTop_toBottomOf="@+id/movie_details_vote_average"/>
+
+            <TextView
+                android:id="@+id/movie_details_heading_trailer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/fontsize_subheading"
+                android:paddingTop="@dimen/activity_half_padding"
+                android:textStyle="bold"
+                android:layout_marginLeft="@dimen/activity_half_padding"
+                android:layout_marginRight="@dimen/activity_half_padding"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:layout_marginStart="@dimen/activity_half_padding"
+                android:layout_marginEnd="@dimen/activity_half_padding"
+                app:layout_constraintTop_toBottomOf="@+id/movie_details_plot"
+                android:text="@string/heading_trailers"/>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/movie_details_trailers"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/activity_half_padding"
+                android:layout_marginRight="@dimen/activity_half_padding"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/movie_details_heading_trailer" />
+
+            <TextView
+                android:id="@+id/movie_details_heading_review"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:textSize="@dimen/fontsize_subheading"
+                android:paddingTop="@dimen/activity_half_padding"
+                android:textStyle="bold"
+                android:layout_marginLeft="@dimen/activity_half_padding"
+                android:layout_marginRight="@dimen/activity_half_padding"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                android:layout_marginStart="@dimen/activity_half_padding"
+                android:layout_marginEnd="@dimen/activity_half_padding"
+                app:layout_constraintTop_toBottomOf="@+id/movie_details_trailers"
+                android:text="@string/heading_reviews"/>
+
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/movie_details_reviews"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/movie_details_heading_review" />
         </android.support.constraint.ConstraintLayout>
     </android.support.v4.widget.NestedScrollView>
 </android.support.design.widget.CoordinatorLayout>

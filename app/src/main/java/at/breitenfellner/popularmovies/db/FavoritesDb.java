@@ -4,7 +4,6 @@ import android.arch.persistence.room.Database;
 import android.arch.persistence.room.RoomDatabase;
 
 import at.breitenfellner.popularmovies.model.Movie;
-import at.breitenfellner.popularmovies.model.MovieDao;
 
 /**
  * This is the database object, representing the SQLite file stored on Android.

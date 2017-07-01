@@ -7,6 +7,5 @@
     tools:contentDescription="Logan"
     android:contentDescription="@string/app_name"
     android:adjustViewBounds="true"
-    android:padding="@dimen/image_padding"
     android:layout_width="match_parent"
     android:layout_height="wrap_content" />

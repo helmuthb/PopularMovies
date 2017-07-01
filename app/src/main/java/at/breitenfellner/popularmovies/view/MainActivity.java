@@ -1,4 +1,4 @@
-package at.breitenfellner.popularmovies;
+package at.breitenfellner.popularmovies.view;
 
 import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.LifecycleRegistryOwner;
@@ -19,10 +19,11 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import at.breitenfellner.popularmovies.R;
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
 import at.breitenfellner.popularmovies.service.MovieService;
-import at.breitenfellner.popularmovies.view.MovieAdapter;
+import at.breitenfellner.popularmovies.viewmodel.MovieDetailsViewModel;
 import at.breitenfellner.popularmovies.viewmodel.MovieListViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -160,15 +161,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onMovieClick(int itemIndex) {
-        Movie theMovie = viewModel.getMovieByIndex(itemIndex);
-        if (theMovie != null) {
-            Intent detailsIntent = new Intent(this, MovieDetailsActivity.class);
-            // set details needed
-            detailsIntent.putExtra(Movie.class.getName(), theMovie.id);
-            // Open new activity
-            startActivity(detailsIntent);
-        }
+    public void onMovieClick(Movie theMovie) {
+        viewModel.showMovie(theMovie);
     }
 
     @NonNull

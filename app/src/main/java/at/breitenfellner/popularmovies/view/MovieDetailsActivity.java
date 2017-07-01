@@ -1,9 +1,10 @@
-package at.breitenfellner.popularmovies;
+package at.breitenfellner.popularmovies.view;
 
 import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.LifecycleRegistryOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
@@ -11,13 +12,19 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import at.breitenfellner.popularmovies.R;
 import at.breitenfellner.popularmovies.model.Movie;
+import at.breitenfellner.popularmovies.model.ReviewList;
+import at.breitenfellner.popularmovies.model.Trailer;
+import at.breitenfellner.popularmovies.model.TrailerList;
 import at.breitenfellner.popularmovies.viewmodel.MovieDetailsViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,22 +35,26 @@ import butterknife.ButterKnife;
  * survive rotation of the screen.
  */
 public class MovieDetailsActivity extends AppCompatActivity
-        implements LifecycleRegistryOwner {
+        implements LifecycleRegistryOwner, TrailerAdapter.TrailerClickListener {
     private final LifecycleRegistry mLifecycleRegistry = new LifecycleRegistry(this);
     private MovieDetailsViewModel viewModel;
 
     @BindView(R.id.movie_details_release_date)
-    TextView mViewReleaseDate;
+    TextView textviewReleaseDate;
     @BindView(R.id.movie_details_vote_average)
-    TextView mViewVoteAverage;
+    TextView textviewVoteAverage;
     @BindView(R.id.movie_details_plot)
-    TextView mViewPlot;
+    TextView textviewPlot;
     @BindView(R.id.movie_details_poster)
-    ImageView mViewPoster;
+    ImageView imageviewPoster;
     @BindView(R.id.movie_details_toolbar)
-    Toolbar mToolbar;
+    Toolbar toolbar;
     @BindView(R.id.movie_details_collapsing_layout)
-    CollapsingToolbarLayout mCollapsingLayout;
+    CollapsingToolbarLayout collapsingToolbarLayout;
+    @BindView(R.id.movie_details_trailers)
+    RecyclerView recyclerviewTrailers;
+    @BindView(R.id.movie_details_reviews)
+    RecyclerView recyclerviewReviews;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,9 +63,15 @@ public class MovieDetailsActivity extends AppCompatActivity
         setContentView(R.layout.activity_movie_details);
         ButterKnife.bind(this);
         // set toolbar
-        setSupportActionBar(mToolbar);
+        setSupportActionBar(toolbar);
         //noinspection ConstantConditions
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        // activate recyclerview for trailers
+        RecyclerView.LayoutManager layout = new LinearLayoutManager(this);
+        recyclerviewTrailers.setLayoutManager(layout);
+        // activate recyclerview for reviews
+        layout = new LinearLayoutManager(this);
+        recyclerviewReviews.setLayoutManager(layout);
         // get ViewModel
         viewModel = ViewModelProviders.of(this).get(MovieDetailsViewModel.class);
         // bind the ViewModel fields to the display
@@ -65,18 +82,36 @@ public class MovieDetailsActivity extends AppCompatActivity
                 if (movie != null) {
                     // title
                     setTitle(movie.title);
-                    mCollapsingLayout.setTitle(movie.title);
-                    mViewPoster.setContentDescription(movie.title);
+                    collapsingToolbarLayout.setTitle(movie.title);
+                    imageviewPoster.setContentDescription(movie.title);
                     // plot
-                    mViewPlot.setText(movie.overview);
+                    textviewPlot.setText(movie.overview);
                     // release data
-                    mViewReleaseDate.setText(res.getString(R.string.release_date, movie.releaseDate));
+                    textviewReleaseDate.setText(res.getString(R.string.release_date, movie.releaseDate));
                     // vote average
-                    mViewVoteAverage.setText(res.getString(R.string.average_rating, movie.voteAverage));
+                    textviewVoteAverage.setText(res.getString(R.string.average_rating, movie.voteAverage));
                     // poster
                     Picasso.with(MovieDetailsActivity.this)
                             .load(viewModel.getPosterUrl())
-                            .into(mViewPoster);
+                            .into(imageviewPoster);
+                }
+            }
+        });
+        viewModel.getTrailers().observe(this, new Observer<TrailerList>() {
+            @Override
+            public void onChanged(@Nullable TrailerList trailerList) {
+                if (trailerList != null) {
+                    recyclerviewTrailers.setAdapter(
+                            new TrailerAdapter(trailerList, MovieDetailsActivity.this)
+                    );
+                }
+            }
+        });
+        viewModel.getReviews().observe(this, new Observer<ReviewList>() {
+            @Override
+            public void onChanged(@Nullable ReviewList reviewList) {
+                if (reviewList != null) {
+                    recyclerviewReviews.setAdapter(new ReviewAdapter(reviewList));
                 }
             }
         });
@@ -94,5 +129,10 @@ public class MovieDetailsActivity extends AppCompatActivity
     @Override
     public LifecycleRegistry getLifecycle() {
         return mLifecycleRegistry;
+    }
+
+    @Override
+    public void onTrailerClick(Trailer trailer) {
+        viewModel.showTrailer(trailer);
     }
 }

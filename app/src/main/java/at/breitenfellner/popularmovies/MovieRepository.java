@@ -9,6 +9,8 @@ import java.util.HashMap;
 
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
+import at.breitenfellner.popularmovies.model.ReviewList;
+import at.breitenfellner.popularmovies.model.TrailerList;
 import at.breitenfellner.popularmovies.service.MovieService;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -27,6 +29,10 @@ public class MovieRepository {
     private final HashMap<String, MutableLiveData<Movie>> movieCache;
     @NonNull
     private final HashMap<String, MutableLiveData<MovieList>> movieListCache;
+    @NonNull
+    private final HashMap<String, MutableLiveData<TrailerList>> trailerListCache;
+    @NonNull
+    private final HashMap<String, MutableLiveData<ReviewList>> reviewListCache;
     @Nullable
     static private MovieRepository theRepository = null;
 
@@ -38,9 +44,11 @@ public class MovieRepository {
         movieService = retrofit.create(MovieService.class);
         movieCache = new HashMap<>();
         movieListCache = new HashMap<>();
+        trailerListCache = new HashMap<>();
+        reviewListCache = new HashMap<>();
     }
 
-    @Nullable
+    @NonNull
     public static MovieRepository getInstance() {
         if (theRepository == null) {
             theRepository = new MovieRepository();
@@ -137,5 +145,87 @@ public class MovieRepository {
             loadMovieList(sortOrder, theMovieList);
         }
         return theMovieList;
+    }
+
+    private void loadTrailerList(String movieId, @NonNull final MutableLiveData<TrailerList> trailerList) {
+        // load trailer list
+        Call<TrailerList> trailerListCall = movieService.getTrailers(movieId, BuildConfig.THEMOVIEDB_KEY);
+        trailerListCall.enqueue(new Callback<TrailerList>() {
+            @Override
+            public void onResponse(@NonNull Call<TrailerList> call, @NonNull Response<TrailerList> response) {
+                // set the value of the LiveData
+                trailerList.setValue(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<TrailerList> call, @NonNull Throwable t) {
+                // Create a movie list with error
+                TrailerList error = new TrailerList();
+                error.trailers = null;
+                error.isError = true;
+                // and set it into the live data
+                trailerList.setValue(error);
+            }
+        });
+    }
+
+    public LiveData<TrailerList> getTrailers(String movieId) {
+        // get from cache
+        MutableLiveData<TrailerList> theTrailerList = trailerListCache.get(movieId);
+        if (theTrailerList == null) {
+            // not in cache - create an object & load it in background
+            final MutableLiveData<TrailerList> newTrailerList = new MutableLiveData<>();
+            // load in background
+            loadTrailerList(movieId, newTrailerList);
+            // put into cache for the future
+            trailerListCache.put(movieId, newTrailerList);
+            theTrailerList = newTrailerList;
+        }
+        else if (theTrailerList.getValue() != null && theTrailerList.getValue().isError) {
+            // load did not work - let's retry
+            loadTrailerList(movieId, theTrailerList);
+        }
+        return theTrailerList;
+    }
+
+    private void loadReviewList(String movieId, @NonNull final MutableLiveData<ReviewList> reviewList) {
+        // load trailer list
+        Call<ReviewList> reviewListCall = movieService.getReviews(movieId, BuildConfig.THEMOVIEDB_KEY);
+        reviewListCall.enqueue(new Callback<ReviewList>() {
+            @Override
+            public void onResponse(@NonNull Call<ReviewList> call, @NonNull Response<ReviewList> response) {
+                // set the value of the LiveData
+                reviewList.setValue(response.body());
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<ReviewList> call, @NonNull Throwable t) {
+                // Create a movie list with error
+                ReviewList error = new ReviewList();
+                error.reviews = null;
+                error.isError = true;
+                // and set it into the live data
+                reviewList.setValue(error);
+            }
+        });
+    }
+
+    public LiveData<ReviewList> getReviews(String movieId) {
+        // get from cache
+        MutableLiveData<ReviewList> theReviewList = reviewListCache.get(movieId);
+        if (theReviewList == null) {
+            // not in cache - create an object & load it in background
+            final MutableLiveData<ReviewList> newReviewList = new MutableLiveData<>();
+            // load in background
+            loadReviewList(movieId, newReviewList);
+            // put into cache for the future
+            reviewListCache.put(movieId, newReviewList);
+            theReviewList = newReviewList;
+        }
+        else if (theReviewList.getValue() != null && theReviewList.getValue().isError) {
+            // load did not work - let's retry
+            loadReviewList(movieId, theReviewList);
+        }
+        return theReviewList;
     }
 }

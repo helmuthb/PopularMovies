@@ -18,7 +18,7 @@
         android:theme="@style/AppTheme"
         android:fullBackupContent="@xml/backup_descriptor"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".MainActivity"
+        <activity android:name=".view.MainActivity"
             android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,13 +26,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MovieDetailsActivity"
-            android:parentActivityName=".MainActivity"
+        <activity android:name=".view.MovieDetailsActivity"
+            android:parentActivityName=".view.MainActivity"
             android:theme="@style/DetailsTheme"
             tools:targetApi="jelly_bean">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+                android:value=".view.MainActivity" />
         </activity>
         <provider android:name=".provider.FavoritesContentProvider"
             android:authorities="at.breitenfellner.popularmovies"

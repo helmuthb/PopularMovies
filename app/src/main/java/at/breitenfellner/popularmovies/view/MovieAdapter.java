@@ -22,13 +22,13 @@ import butterknife.ButterKnife;
  */
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
-    private final MovieList mMovieList;
-    private final MovieClickListener mClickListener;
+    private final MovieList movieList;
+    private final MovieClickListener clickListener;
 
-    public MovieAdapter(MovieList movies, MovieClickListener clickListener)
+    public MovieAdapter(MovieList movieList, MovieClickListener clickListener)
     {
-        mMovieList = movies;
-        mClickListener = clickListener;
+        this.movieList = movieList;
+        this.clickListener = clickListener;
     }
 
     @NonNull
@@ -47,15 +47,19 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public int getItemCount() {
-        if (mMovieList == null || mMovieList.movies == null) {
+        if (movieList == null || movieList.movies == null) {
             return 0;
         }
-        return mMovieList.movies.size();
+        return movieList.movies.size();
     }
 
     class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         @Nullable
-        @BindView(R.id.movie_poster) ImageView moviePoster;
+        @BindView(R.id.movie_poster)
+        ImageView moviePoster;
+
+        Movie theMovie;
+
         MovieViewHolder(@NonNull View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
@@ -63,7 +67,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         }
 
         void bind(int listIndex) {
-            Movie theMovie = mMovieList.movies.get(listIndex);
+            theMovie = movieList.movies.get(listIndex);
             Context ctx = moviePoster.getContext();
             String baseUrl = ctx.getResources().getString(R.string.tmdb_image_baseurl_small);
             Picasso.with(ctx)
@@ -75,11 +79,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
         @Override
         public void onClick(View v) {
-            mClickListener.onMovieClick(getAdapterPosition());
+            clickListener.onMovieClick(theMovie);
         }
     }
 
     public interface MovieClickListener {
-        void onMovieClick(int itemIndex);
+        void onMovieClick(Movie movie);
     }
 }

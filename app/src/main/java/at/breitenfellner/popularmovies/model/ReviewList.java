@@ -11,4 +11,5 @@ import java.util.List;
 public class ReviewList {
     @Json(name="results")
     public List<Review> reviews;
+    public boolean isError = false;
 }

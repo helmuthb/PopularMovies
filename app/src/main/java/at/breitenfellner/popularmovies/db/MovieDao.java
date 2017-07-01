@@ -1,10 +1,12 @@
-package at.breitenfellner.popularmovies.model;
+package at.breitenfellner.popularmovies.db;
 
 import android.arch.persistence.room.Dao;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.OnConflictStrategy;
 import android.arch.persistence.room.Query;
 import android.database.Cursor;
+
+import at.breitenfellner.popularmovies.model.Movie;
 
 /**
  * This is the Data Access Object definition for the table of Movies.

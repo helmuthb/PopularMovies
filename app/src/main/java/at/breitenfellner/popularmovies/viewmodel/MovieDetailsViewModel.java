@@ -5,12 +5,18 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
 import android.arch.lifecycle.Observer;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import at.breitenfellner.popularmovies.MovieRepository;
 import at.breitenfellner.popularmovies.R;
 import at.breitenfellner.popularmovies.model.Movie;
+import at.breitenfellner.popularmovies.model.ReviewList;
+import at.breitenfellner.popularmovies.model.Trailer;
+import at.breitenfellner.popularmovies.model.TrailerList;
 
 /**
  * This is the view model for the details view, providing the data for a specific movie.
@@ -24,7 +30,15 @@ public class MovieDetailsViewModel extends AndroidViewModel {
     private final MediatorLiveData<Movie> movie;
     @Nullable
     private LiveData<Movie> movieSource;
+    @NonNull
+    private final MediatorLiveData<TrailerList> trailers;
     @Nullable
+    private LiveData<TrailerList> trailerSource;
+    @NonNull
+    private final MediatorLiveData<ReviewList> reviews;
+    @Nullable
+    private LiveData<ReviewList> reviewSource;
+    @NonNull
     private final MovieRepository repository;
 
     /**
@@ -36,6 +50,10 @@ public class MovieDetailsViewModel extends AndroidViewModel {
         super(application);
         movie = new MediatorLiveData<>();
         movieSource = null;
+        trailers = new MediatorLiveData<>();
+        trailerSource = null;
+        reviews = new MediatorLiveData<>();
+        reviewSource = null;
         repository = MovieRepository.getInstance();
     }
 
@@ -47,6 +65,26 @@ public class MovieDetailsViewModel extends AndroidViewModel {
     @NonNull
     public LiveData<Movie> getMovie() {
         return movie;
+    }
+
+    /**
+     * Get the TrailerList LiveData being provided by the repository.
+     *
+     * @return the TrailerList LiveData which will be updated once data is available.
+     */
+    @NonNull
+    public LiveData<TrailerList> getTrailers() {
+        return trailers;
+    }
+
+    /**
+     * Get the ReviewList LiveData being provided by the repository.
+     *
+     * @return the ReviewList LiveData which will be updated once data is available.
+     */
+    @NonNull
+    public LiveData<ReviewList> getReviews() {
+        return reviews;
     }
 
     /**
@@ -70,6 +108,7 @@ public class MovieDetailsViewModel extends AndroidViewModel {
      * @param movieId String identifier of the movie
      */
     public void loadMovie(String movieId) {
+        // movie ...
         LiveData<Movie> movieLiveData = repository.getMovie(movieId);
         if (movieSource != null) {
             movie.removeSource(movieSource);
@@ -81,6 +120,47 @@ public class MovieDetailsViewModel extends AndroidViewModel {
                 movie.setValue(m);
             }
         });
+        // ... and trailers ...
+        LiveData<TrailerList> trailerListLiveData = repository.getTrailers(movieId);
+        if (trailerSource != null) {
+            trailers.removeSource(trailerSource);
+        }
+        trailerSource = trailerListLiveData;
+        trailers.addSource(trailerListLiveData, new Observer<TrailerList>() {
+            @Override
+            public void onChanged(@Nullable TrailerList t) {
+                trailers.setValue(t);
+            }
+        });
+        // ... and reviews!
+        LiveData<ReviewList> reviewListLiveData = repository.getReviews(movieId);
+        if (reviewSource != null) {
+            reviews.removeSource(reviewSource);
+        }
+        reviewSource = reviewListLiveData;
+        reviews.addSource(reviewListLiveData, new Observer<ReviewList>() {
+            @Override
+            public void onChanged(@Nullable ReviewList r) {
+                reviews.setValue(r);
+            }
+        });
     }
 
+    /**
+     * Show the Trailer using an Intent, either on the browser or the Youtube application
+     *
+     * @param trailer Trailer object to display
+     */
+    public void showTrailer(Trailer trailer) {
+        if (trailer != null) {
+            Uri uriApp = Uri.parse("vnd.youtube:" + trailer.key);
+            Uri uriWeb = Uri.parse("http://www.youtube.com/watch?v=" + trailer.key);
+            try {
+                getApplication().startActivity(new Intent(Intent.ACTION_VIEW, uriApp));
+            } catch (ActivityNotFoundException e) {
+                getApplication().startActivity(new Intent(Intent.ACTION_VIEW, uriWeb));
+            }
+        }
+
+    }
 }

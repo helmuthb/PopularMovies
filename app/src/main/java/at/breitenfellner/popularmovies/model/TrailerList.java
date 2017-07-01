@@ -11,4 +11,6 @@ import java.util.List;
 public class TrailerList {
     @Json(name="results")
     public List<Trailer> trailers;
+
+    public boolean isError = false;
 }
