@@ -4,15 +4,20 @@ import android.app.Application;
 import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MediatorLiveData;
+import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Observer;
 import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import at.breitenfellner.popularmovies.MovieRepository;
 import at.breitenfellner.popularmovies.R;
+import at.breitenfellner.popularmovies.db.MovieContract;
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.ReviewList;
 import at.breitenfellner.popularmovies.model.Trailer;
@@ -39,6 +44,8 @@ public class MovieDetailsViewModel extends AndroidViewModel {
     @Nullable
     private LiveData<ReviewList> reviewSource;
     @NonNull
+    private final MutableLiveData<Boolean> favoriteFlag;
+    @NonNull
     private final MovieRepository repository;
 
     /**
@@ -54,6 +61,8 @@ public class MovieDetailsViewModel extends AndroidViewModel {
         trailerSource = null;
         reviews = new MediatorLiveData<>();
         reviewSource = null;
+        favoriteFlag = new MutableLiveData<>();
+        favoriteFlag.setValue(Boolean.FALSE);
         repository = MovieRepository.getInstance();
     }
 
@@ -87,6 +96,11 @@ public class MovieDetailsViewModel extends AndroidViewModel {
         return reviews;
     }
 
+    @NonNull
+    public LiveData<Boolean> isFavorite() {
+        return favoriteFlag;
+    }
+
     /**
      * Get the poster Url for the movie - if known.
      *
@@ -107,7 +121,7 @@ public class MovieDetailsViewModel extends AndroidViewModel {
      *
      * @param movieId String identifier of the movie
      */
-    public void loadMovie(String movieId) {
+    public void loadMovie(final String movieId) {
         // movie ...
         LiveData<Movie> movieLiveData = repository.getMovie(movieId);
         if (movieSource != null) {
@@ -144,6 +158,20 @@ public class MovieDetailsViewModel extends AndroidViewModel {
                 reviews.setValue(r);
             }
         });
+        // and now check if it is a favorite
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Cursor cursor = getApplication().getContentResolver().query(
+                        MovieContract.MovieEntry.CONTENT_URI,
+                        new String[]{MovieContract.MovieEntry.COLUMN_ID},
+                        MovieContract.MovieEntry.COLUMN_ID + " = ?",
+                        new String[]{movieId},
+                        null);
+                favoriteFlag.setValue(cursor.getCount() > 0);
+            }
+        }).run();
+
     }
 
     /**
@@ -165,9 +193,38 @@ public class MovieDetailsViewModel extends AndroidViewModel {
 
     public void toggleFavorite() {
         if (movie.getValue() != null) {
-            Movie m = movie.getValue();
-            m.favorite = !m.favorite;
-            movie.setValue(m);
+            final boolean isFav = !favoriteFlag.getValue();
+            final String movieId = movie.getValue().id;
+            final String movieTitle = movie.getValue().title;
+            favoriteFlag.setValue(isFav);
+            // go in other thread into DB
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (isFav) {
+                        // add into DB
+                        ContentValues values = new ContentValues();
+                        values.put(MovieContract.MovieEntry.COLUMN_ID, movieId);
+                        values.put(MovieContract.MovieEntry.COLUMN_TITLE, movieTitle);
+                        getApplication().getContentResolver().insert(
+                                MovieContract.MovieEntry.CONTENT_URI,
+                                values
+                        );
+                    } else {
+                        // delete from DB
+                        getApplication().getContentResolver().delete(
+                                MovieContract.MovieEntry.CONTENT_URI,
+                                MovieContract.MovieEntry.COLUMN_ID + " = ?",
+                                new String[]{movieId}
+                        );
+                    }
+                    // and inform everyone we have changed something
+                    getApplication().getContentResolver().notifyChange(
+                            MovieContract.MovieEntry.CONTENT_URI,
+                            null
+                    );
+                }
+            }).run();
         }
     }
 }

@@ -1,16 +1,20 @@
 package at.breitenfellner.popularmovies.view;
 
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.Loader;
+import android.support.v4.content.CursorLoader;
 import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.LifecycleRegistryOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -19,11 +23,14 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import at.breitenfellner.popularmovies.R;
+import at.breitenfellner.popularmovies.db.MovieContract;
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
 import at.breitenfellner.popularmovies.service.MovieService;
-import at.breitenfellner.popularmovies.viewmodel.MovieDetailsViewModel;
 import at.breitenfellner.popularmovies.viewmodel.MovieListViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -32,27 +39,32 @@ import icepick.State;
 
 public class MainActivity extends AppCompatActivity
         implements MovieAdapter.MovieClickListener,
-        LifecycleRegistryOwner {
+        LifecycleRegistryOwner,
+        LoaderManager.LoaderCallbacks<Cursor> {
 
     private final static int SORTORDER_POPULARITY = 0;
-    final static int SORTORDER_RATING = 1;
+    private final static int SORTORDER_RATING = 1;
+    private final static int SORTORDER_FAVORITES = 2;
     private final LifecycleRegistry mLifecycleRegistry = new LifecycleRegistry(this);
 
+    private final static int ID_MOVIELIST_LOADER = 123;
+    private final static String[] MOVIELIST_PROJECTION = {
+            MovieContract.MovieEntry.COLUMN_ID
+    };
+
     @BindView(R.id.sort_order)
-    Spinner mViewSortOrder;
+    Spinner spinnerSortOrder;
     @BindView(R.id.progress_bar)
-    ProgressBar mViewPleaseWait;
+    ProgressBar viewPleaseWait;
     @BindView(R.id.movie_list)
-    RecyclerView mViewMovieList;
+    RecyclerView recyclerviewMovies;
     @BindView(R.id.error_retry)
-    Button mButtonErrorRetry;
+    Button buttonErrorRetry;
     @BindView(R.id.error_text)
-    TextView mViewErrorText;
-    @Nullable
-    private MovieAdapter mAdapter;
+    TextView textviewError;
     private MovieListViewModel viewModel;
     @State
-    int mSortOrder;
+    int sortOrder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,27 +79,27 @@ public class MainActivity extends AppCompatActivity
                 android.R.layout.simple_spinner_item
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        mViewSortOrder.setAdapter(adapter);
+        spinnerSortOrder.setAdapter(adapter);
         // prepare recycler view
         // number of columns from a resource -> adjustable by size of screen
         int columns = getResources().getInteger(R.integer.columns);
         RecyclerView.LayoutManager layout = new GridLayoutManager(this, columns);
-        mViewMovieList.setLayoutManager(layout);
+        recyclerviewMovies.setLayoutManager(layout);
         // activate "retry" button
-        mButtonErrorRetry.setOnClickListener(new View.OnClickListener() {
+        buttonErrorRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fetchMovies(mSortOrder);
+                fetchMovies(sortOrder);
             }
         });
         // react on change of sort order
-        mViewSortOrder.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        spinnerSortOrder.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (mSortOrder != position) {
-                    mSortOrder = position;
+                if (sortOrder != position) {
+                    sortOrder = position;
                     // load data
-                    fetchMovies(mSortOrder);
+                    fetchMovies(sortOrder);
                 }
             }
 
@@ -105,14 +117,16 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onChanged(@Nullable MovieList movieList) {
                 // show the movies
-                mAdapter = new MovieAdapter(movieList, MainActivity.this);
-                mViewMovieList.setAdapter(mAdapter);
+                MovieAdapter adapter = new MovieAdapter(movieList, MainActivity.this);
+                recyclerviewMovies.setAdapter(adapter);
                 // show the status
                 showStatus(movieList);
             }
         });
         // fetch movies
-        fetchMovies(mSortOrder);
+        fetchMovies(sortOrder);
+        // query favorite movies
+        getSupportLoaderManager().initLoader(ID_MOVIELIST_LOADER, null, this);
     }
 
     @Override
@@ -135,39 +149,73 @@ public class MainActivity extends AppCompatActivity
     private void showStatus(@Nullable MovieList movieList) {
         if (movieList == null) {
             // New or loading
-            mViewMovieList.setVisibility(View.GONE);
-            mButtonErrorRetry.setVisibility(View.GONE);
-            mViewErrorText.setVisibility(View.GONE);
-            mViewPleaseWait.setVisibility(View.VISIBLE);
+            recyclerviewMovies.setVisibility(View.GONE);
+            buttonErrorRetry.setVisibility(View.GONE);
+            textviewError.setVisibility(View.GONE);
+            viewPleaseWait.setVisibility(View.VISIBLE);
         } else if (movieList.isError) {
             // Error
-            mViewMovieList.setVisibility(View.GONE);
-            mButtonErrorRetry.setVisibility(View.VISIBLE);
-            mViewErrorText.setVisibility(View.VISIBLE);
-            mViewPleaseWait.setVisibility(View.GONE);
+            recyclerviewMovies.setVisibility(View.GONE);
+            buttonErrorRetry.setVisibility(View.VISIBLE);
+            textviewError.setVisibility(View.VISIBLE);
+            viewPleaseWait.setVisibility(View.GONE);
         } else {
             // Data
-            mViewMovieList.setVisibility(View.VISIBLE);
-            mButtonErrorRetry.setVisibility(View.GONE);
-            mViewErrorText.setVisibility(View.GONE);
-            mViewPleaseWait.setVisibility(View.GONE);
+            recyclerviewMovies.setVisibility(View.VISIBLE);
+            buttonErrorRetry.setVisibility(View.GONE);
+            textviewError.setVisibility(View.GONE);
+            viewPleaseWait.setVisibility(View.GONE);
         }
     }
 
     private void fetchMovies(int sortOrder) {
         viewModel.loadMovies(sortOrder == SORTORDER_POPULARITY
-                ? MovieService.SORT_POPULARITY
-                : MovieService.SORT_RATING);
+                        ? MovieService.SORT_POPULARITY
+                        : MovieService.SORT_RATING,
+                sortOrder == SORTORDER_FAVORITES);
     }
 
     @Override
     public void onMovieClick(Movie theMovie) {
-        viewModel.showMovie(theMovie);
+        viewModel.openMovieView(theMovie);
     }
 
     @NonNull
     @Override
     public LifecycleRegistry getLifecycle() {
         return mLifecycleRegistry;
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case ID_MOVIELIST_LOADER:
+                Uri movieQueryUri = MovieContract.MovieEntry.CONTENT_URI;
+                return new CursorLoader(
+                        this,
+                        movieQueryUri,
+                        MOVIELIST_PROJECTION,
+                        null,
+                        null,
+                        null);
+            default:
+                throw new UnsupportedOperationException("Loader not implemented: " + id);
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        List<String> favoriteIds = new ArrayList<>();
+        data.moveToFirst();
+        while (!data.isAfterLast()) {
+            favoriteIds.add(data.getString(0));
+            data.moveToNext();
+        }
+        viewModel.notifyFavorites(favoriteIds);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
     }
 }

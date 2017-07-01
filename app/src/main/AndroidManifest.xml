@@ -34,7 +34,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".view.MainActivity" />
         </activity>
-        <provider android:name=".provider.FavoritesContentProvider"
+        <provider android:name=".db.MovieProvider"
             android:authorities="at.breitenfellner.popularmovies"
             android:readPermission="at.breitenfellner.popularmovies.permission.READ_PERMISSION"
             android:writePermission="at.breitenfellner.popularmovies.permission.WRITE_PERMISSION"/>

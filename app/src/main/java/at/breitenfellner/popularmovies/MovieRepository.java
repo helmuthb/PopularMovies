@@ -4,8 +4,11 @@ import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
@@ -144,6 +147,50 @@ public class MovieRepository {
             // load did not work - let's retry
             loadMovieList(sortOrder, theMovieList);
         }
+        return theMovieList;
+    }
+
+    public LiveData<MovieList> getMovies(List<String> movieIds) {
+        final MutableLiveData<MovieList> theMovieList = new MutableLiveData<>();
+        final List<Movie> movies = new ArrayList<>();
+        final MovieList m = new MovieList();
+        m.movies = movies;
+        for (String movieId : movieIds) {
+            // for each movie try to get it from cache
+            // we also request it to be loaded for the future
+            LiveData<Movie> cachedMovie = getMovie(movieId);
+            if (cachedMovie != null && cachedMovie.getValue() != null) {
+                synchronized (movies) {
+                    movies.add(cachedMovie.getValue());
+                }
+            }
+            else {
+                // not in cache - ask for it
+                // this is waste, but it should only happen once
+                Call<Movie> movieCall = movieService.getMovie(movieId, BuildConfig.THEMOVIEDB_KEY);
+                movieCall.enqueue(new Callback<Movie>() {
+                    @Override
+                    public void onResponse(@NonNull Call<Movie> call, @NonNull Response<Movie> response) {
+                        // set it into the list
+                        synchronized (movies) {
+                            movies.add(response.body());
+                            // and also set it into the LiveData to notify listeners
+                            theMovieList.setValue(m);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(@NonNull Call<Movie> call, @NonNull Throwable t) {
+                        // we ignore this movie - does it not exist anymore?
+                    }
+                });
+            }
+        }
+        // set the value in the LiveData object
+        synchronized (movies) {
+            theMovieList.setValue(m);
+        }
+        // and return the LiveData
         return theMovieList;
     }
 

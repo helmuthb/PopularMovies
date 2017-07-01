@@ -5,6 +5,7 @@
     <string-array name="sort_order">
         <item name="by_popularity">Sort by Popularity</item>
         <item name="by_rating">Sort by Rating</item>
+        <item name="favorites">Show Favorites</item>
     </string-array>
     <string name="release_date">Release date: %1$s</string>
     <string name="average_rating">Average rating: %1$f</string>

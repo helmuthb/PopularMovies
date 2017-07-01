@@ -10,6 +10,9 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import at.breitenfellner.popularmovies.MovieRepository;
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
@@ -25,6 +28,8 @@ public class MovieListViewModel extends AndroidViewModel {
     private final MediatorLiveData<MovieList> movieList;
     @Nullable
     private LiveData<MovieList> movieListSource;
+    private List<String> favoriteIds;
+    boolean showFavorites;
     @Nullable
     private final MovieRepository repository;
 
@@ -37,6 +42,7 @@ public class MovieListViewModel extends AndroidViewModel {
         super(application);
         movieList = new MediatorLiveData<>();
         movieListSource = null;
+        showFavorites = false;
         repository = MovieRepository.getInstance();
     }
 
@@ -55,14 +61,20 @@ public class MovieListViewModel extends AndroidViewModel {
      *
      * @param sortOrder requested sortorder
      */
-    public void loadMovies(String sortOrder) {
-        LiveData<MovieList> movieListLiveData = repository.getMovies(sortOrder);
+    public void loadMovies(String sortOrder, boolean showFavorites) {
+        this.showFavorites = showFavorites;
+        LiveData<MovieList> movies;
+        if (!showFavorites) {
+            movies = repository.getMovies(sortOrder);
+        }
+        else {
+            movies = repository.getMovies(favoriteIds);
+        }
         if (movieListSource != null) {
             movieList.removeSource(movieListSource);
         }
-        // memorize the list source to be able to remove it later
-        movieListSource = movieListLiveData;
-        movieList.addSource(movieListLiveData, new Observer<MovieList>() {
+        movieListSource = movies;
+        movieList.addSource(movies, new Observer<MovieList>() {
             @Override
             public void onChanged(@Nullable MovieList ml) {
                 movieList.setValue(ml);
@@ -88,7 +100,7 @@ public class MovieListViewModel extends AndroidViewModel {
      * Show the Movie details activity
      * @param m Movie object to display
      */
-    public void showMovie(Movie m) {
+    public void openMovieView(Movie m) {
         if (m != null) {
             Intent detailsIntent = new Intent(getApplication(), MovieDetailsActivity.class);
             // set details needed
@@ -97,5 +109,14 @@ public class MovieListViewModel extends AndroidViewModel {
         }
     }
 
-
+    /**
+     * Inform the ViewModel about the list of currently selected favorites.
+     * @param favoriteIds list of current favorites
+     */
+    public void notifyFavorites(List<String> favoriteIds) {
+        this.favoriteIds = favoriteIds;
+        if (showFavorites) {
+            loadMovies(null, true);
+        }
+    }
 }

@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -98,14 +99,6 @@ public class MovieDetailsActivity extends AppCompatActivity
                     Picasso.with(MovieDetailsActivity.this)
                             .load(viewModel.getPosterUrl())
                             .into(imageviewPoster);
-                    // is favorite?
-                    if (favoriteMenuItem != null) {
-                        if (movie.favorite) {
-                            favoriteMenuItem.setIcon(R.drawable.ic_favorite);
-                        } else {
-                            favoriteMenuItem.setIcon(R.drawable.ic_make_favorite);
-                        }
-                    }
                 }
             }
         });
@@ -141,6 +134,16 @@ public class MovieDetailsActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.details_menu, menu);
         favoriteMenuItem = menu.findItem(R.id.menu_favorite);
+        viewModel.isFavorite().observe(this, new Observer<Boolean>() {
+            @Override
+            public void onChanged(@Nullable Boolean aBoolean) {
+                if (aBoolean) {
+                    favoriteMenuItem.setIcon(R.drawable.ic_favorite);
+                } else {
+                    favoriteMenuItem.setIcon(R.drawable.ic_make_favorite);
+                }
+            }
+        });
         return true;
     }
 
