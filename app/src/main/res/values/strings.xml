@@ -12,4 +12,5 @@
     <string name="tmdb_image_baseurl_small">http://image.tmdb.org/t/p/w185</string>
     <string name="heading_trailers">Trailers</string>
     <string name="heading_reviews">Reviews</string>
+    <string name="favorite">Make Favorite</string>
 </resources>

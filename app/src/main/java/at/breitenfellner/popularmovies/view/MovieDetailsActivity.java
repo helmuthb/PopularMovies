@@ -15,6 +15,8 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -28,6 +30,7 @@ import at.breitenfellner.popularmovies.model.TrailerList;
 import at.breitenfellner.popularmovies.viewmodel.MovieDetailsViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import retrofit2.http.Path;
 
 /**
  * This activity displays a selected movie chosen by the user.
@@ -55,6 +58,7 @@ public class MovieDetailsActivity extends AppCompatActivity
     RecyclerView recyclerviewTrailers;
     @BindView(R.id.movie_details_reviews)
     RecyclerView recyclerviewReviews;
+    MenuItem favoriteMenuItem = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +98,14 @@ public class MovieDetailsActivity extends AppCompatActivity
                     Picasso.with(MovieDetailsActivity.this)
                             .load(viewModel.getPosterUrl())
                             .into(imageviewPoster);
+                    // is favorite?
+                    if (favoriteMenuItem != null) {
+                        if (movie.favorite) {
+                            favoriteMenuItem.setIcon(R.drawable.ic_favorite);
+                        } else {
+                            favoriteMenuItem.setIcon(R.drawable.ic_make_favorite);
+                        }
+                    }
                 }
             }
         });
@@ -123,6 +135,22 @@ public class MovieDetailsActivity extends AppCompatActivity
             // set the data in the ViewModel
             viewModel.loadMovie(movieId);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.details_menu, menu);
+        favoriteMenuItem = menu.findItem(R.id.menu_favorite);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_favorite) {
+            viewModel.toggleFavorite();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @NonNull

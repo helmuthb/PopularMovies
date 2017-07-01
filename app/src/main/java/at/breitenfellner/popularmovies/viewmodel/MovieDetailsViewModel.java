@@ -161,6 +161,13 @@ public class MovieDetailsViewModel extends AndroidViewModel {
                 getApplication().startActivity(new Intent(Intent.ACTION_VIEW, uriWeb));
             }
         }
+    }
 
+    public void toggleFavorite() {
+        if (movie.getValue() != null) {
+            Movie m = movie.getValue();
+            m.favorite = !m.favorite;
+            movie.setValue(m);
+        }
     }
 }
