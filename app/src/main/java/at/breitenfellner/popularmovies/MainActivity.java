@@ -1,6 +1,11 @@
 package at.breitenfellner.popularmovies;
 
+import android.arch.lifecycle.LifecycleRegistry;
+import android.arch.lifecycle.LifecycleRegistryOwner;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,43 +19,39 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.ryanharter.auto.value.moshi.MoshiAdapterFactory;
-
-import java.io.IOException;
-import java.util.concurrent.Callable;
-
 import at.breitenfellner.popularmovies.model.Movie;
 import at.breitenfellner.popularmovies.model.MovieList;
 import at.breitenfellner.popularmovies.service.MovieService;
 import at.breitenfellner.popularmovies.view.MovieAdapter;
+import at.breitenfellner.popularmovies.viewmodel.MovieListViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import icepick.Icepick;
 import icepick.State;
-import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.observers.DisposableObserver;
-import io.reactivex.schedulers.Schedulers;
-import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.moshi.MoshiConverterFactory;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieClickListener {
+public class MainActivity extends AppCompatActivity
+        implements MovieAdapter.MovieClickListener,
+        LifecycleRegistryOwner {
 
-    final static int SORTORDER_POPULARITY = 0;
+    private final static int SORTORDER_POPULARITY = 0;
     final static int SORTORDER_RATING = 1;
+    private final LifecycleRegistry mLifecycleRegistry = new LifecycleRegistry(this);
 
-    @BindView(R.id.sort_order) Spinner mViewSortOrder;
-    @BindView(R.id.progress_bar) ProgressBar mViewPleaseWait;
-    @BindView(R.id.movie_list) RecyclerView mViewMovieList;
-    @BindView(R.id.error_retry) Button mButtonErrorRetry;
-    @BindView(R.id.error_text) TextView mViewErrorText;
-    MovieService movieService = null;
-    MovieAdapter mAdapter;
-    @State MovieList mMovieList;
-    @State int mSortOrder;
+    @BindView(R.id.sort_order)
+    Spinner mViewSortOrder;
+    @BindView(R.id.progress_bar)
+    ProgressBar mViewPleaseWait;
+    @BindView(R.id.movie_list)
+    RecyclerView mViewMovieList;
+    @BindView(R.id.error_retry)
+    Button mButtonErrorRetry;
+    @BindView(R.id.error_text)
+    TextView mViewErrorText;
+    @Nullable
+    private MovieAdapter mAdapter;
+    private MovieListViewModel viewModel;
+    @State
+    int mSortOrder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,23 +67,16 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mViewSortOrder.setAdapter(adapter);
-        // connect with API
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("http://api.themoviedb.org/")
-                .addConverterFactory(MoshiConverterFactory.create())
-                .build();
-        movieService = retrofit.create(MovieService.class);
         // prepare recycler view
         // number of columns from a resource -> adjustable by size of screen
         int columns = getResources().getInteger(R.integer.columns);
         RecyclerView.LayoutManager layout = new GridLayoutManager(this, columns);
         mViewMovieList.setLayoutManager(layout);
-        // fetch and show movies
-        fetchMoviesAndShow(mSortOrder);
+        // activate "retry" button
         mButtonErrorRetry.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                fetchMoviesAndShow(mSortOrder);
+                fetchMovies(mSortOrder);
             }
         });
         // react on change of sort order
@@ -91,10 +85,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (mSortOrder != position) {
                     mSortOrder = position;
-                    // reset data - not valid anymore
-                    mMovieList = null;
-                    // load data & show it
-                    fetchMoviesAndShow(mSortOrder);
+                    // load data
+                    fetchMovies(mSortOrder);
                 }
             }
 
@@ -103,6 +95,23 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
             }
         });
+        // show / hide fields for loading
+        showStatus(null);
+        // connect with ViewModel
+        viewModel = ViewModelProviders.of(this).get(MovieListViewModel.class);
+        // bind view model to fields
+        viewModel.getMovieList().observe(this, new Observer<MovieList>() {
+            @Override
+            public void onChanged(@Nullable MovieList movieList) {
+                // show the movies
+                mAdapter = new MovieAdapter(movieList, MainActivity.this);
+                mViewMovieList.setAdapter(mAdapter);
+                // show the status
+                showStatus(movieList);
+            }
+        });
+        // fetch movies
+        fetchMovies(mSortOrder);
     }
 
     @Override
@@ -111,105 +120,60 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         Icepick.saveInstanceState(this, outState);
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-    }
-
-    private void fetchMoviesAndShow(int sortOrder) {
-        if (mMovieList == null) {
+    /**
+     * Display the current status, i.e. show/hide the elements relevant.
+     * Status could be:
+     * <p><ul>
+     * <li>New or loading - show progress but no results, retry or error</li>
+     * <li>Error - show no progress or results, but retry and error</li>
+     * <li>Data - show no progress or retry or error, but results</li>
+     * </ul></p>
+     *
+     * @param movieList the MovieList for which the fields shall be adapted
+     */
+    private void showStatus(@Nullable MovieList movieList) {
+        if (movieList == null) {
+            // New or loading
             mViewMovieList.setVisibility(View.GONE);
             mButtonErrorRetry.setVisibility(View.GONE);
             mViewErrorText.setVisibility(View.GONE);
             mViewPleaseWait.setVisibility(View.VISIBLE);
-        }
-        fetchMoviesObservable(sortOrder)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableObserver<MovieList>() {
-                    @Override
-                    public void onNext(@NonNull MovieList aMovieList) {
-                        mMovieList = aMovieList;
-                    }
-
-                    @Override
-                    public void onError(@NonNull Throwable e) {
-                        if (mMovieList != null) {
-                            // ignore - we have old valid data
-                            return;
-                        }
-                        mViewMovieList.setVisibility(View.GONE);
-                        mViewPleaseWait.setVisibility(View.GONE);
-                        if (e.getClass() == IllegalArgumentException.class) {
-                            // nothing selected? clear error
-                            mButtonErrorRetry.setVisibility(View.GONE);
-                            mViewErrorText.setVisibility(View.GONE);
-                        }
-                        else {
-                            // network error? show options to reload
-                            mButtonErrorRetry.setVisibility(View.VISIBLE);
-                            mViewErrorText.setVisibility(View.VISIBLE);
-                        }
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        mViewPleaseWait.setVisibility(View.GONE);
-                        mViewMovieList.setVisibility(View.VISIBLE);
-                        mButtonErrorRetry.setVisibility(View.GONE);
-                        mViewErrorText.setVisibility(View.GONE);
-                        showMovies();
-                    }
-                });
-    }
-
-    private void showMovies() {
-        if (mMovieList != null) {
-            mAdapter = new MovieAdapter(mMovieList, this);
-            mViewMovieList.setAdapter(mAdapter);
-            mViewMovieList.setVisibility(View.VISIBLE);
+        } else if (movieList.isError) {
+            // Error
+            mViewMovieList.setVisibility(View.GONE);
+            mButtonErrorRetry.setVisibility(View.VISIBLE);
+            mViewErrorText.setVisibility(View.VISIBLE);
             mViewPleaseWait.setVisibility(View.GONE);
+        } else {
+            // Data
+            mViewMovieList.setVisibility(View.VISIBLE);
             mButtonErrorRetry.setVisibility(View.GONE);
             mViewErrorText.setVisibility(View.GONE);
+            mViewPleaseWait.setVisibility(View.GONE);
         }
     }
 
-    private MovieList fetchMovies(int sortOrder) throws IOException {
-        Call<MovieList> moviesRequest;
-        if (sortOrder == SORTORDER_POPULARITY) {
-            moviesRequest = movieService.getMovies(
-                    MovieService.SORT_POPULARITY,
-                    BuildConfig.THEMOVIEDB_KEY);
-        }
-        else if (sortOrder == SORTORDER_RATING) {
-            moviesRequest = movieService.getMovies(
-                    MovieService.SORT_RATING,
-                    BuildConfig.THEMOVIEDB_KEY);
-        }
-        else {
-            // The string here is never raised to the UI and needs not to be put into a resource
-            throw new IllegalArgumentException("Sortorder must be 'By Popularity' or 'By Rating'");
-        }
-        return moviesRequest.execute().body();
-    }
-
-
-    private Observable<MovieList> fetchMoviesObservable(final int sortOrder) {
-        return Observable.defer(new Callable<ObservableSource<? extends MovieList>>() {
-            @Override
-            public ObservableSource<? extends MovieList> call() throws Exception {
-                return Observable.just(fetchMovies(sortOrder));
-            }
-        });
+    private void fetchMovies(int sortOrder) {
+        viewModel.loadMovies(sortOrder == SORTORDER_POPULARITY
+                ? MovieService.SORT_POPULARITY
+                : MovieService.SORT_RATING);
     }
 
     @Override
     public void onMovieClick(int itemIndex) {
-        Intent detailsIntent = new Intent(this, MovieDetails.class);
-        Movie theMovie = mMovieList.movies.get(itemIndex);
-        // set details needed
-        detailsIntent.putExtra(Movie.class.getName(), theMovie);
-        // Open new activity
-        startActivity(detailsIntent);
+        Movie theMovie = viewModel.getMovieByIndex(itemIndex);
+        if (theMovie != null) {
+            Intent detailsIntent = new Intent(this, MovieDetailsActivity.class);
+            // set details needed
+            detailsIntent.putExtra(Movie.class.getName(), theMovie.id);
+            // Open new activity
+            startActivity(detailsIntent);
+        }
+    }
+
+    @NonNull
+    @Override
+    public LifecycleRegistry getLifecycle() {
+        return mLifecycleRegistry;
     }
 }
