@@ -38,19 +38,13 @@ import butterknife.ButterKnife;
  * The information which movie was selected is hold in a ViewModel and will therefore
  * survive rotation of the screen.
  * There was an issue with retaining the scroll position after rotation.
- * This was solved with the answer here: https://stackoverflow.com/a/39154266/813725
+ * This was solved with the answer here: https://stackoverflow.com/a/39898595/813725
  */
 public class MovieDetailsActivity extends AppCompatActivity
         implements LifecycleRegistryOwner, TrailerAdapter.TrailerClickListener {
     private final LifecycleRegistry mLifecycleRegistry = new LifecycleRegistry(this);
     private MovieDetailsViewModel viewModel;
 
-    @BindView(R.id.movie_details)
-    CoordinatorLayout coordinatorLayout;
-    @BindView(R.id.movie_details_appbar_layout)
-    AppBarLayout appBarLayout;
-    @BindView(R.id.movie_details_scroll)
-    View scrollView;
     @BindView(R.id.movie_details_release_date)
     TextView textviewReleaseDate;
     @BindView(R.id.movie_details_vote_average)
