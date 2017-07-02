@@ -1,10 +1,5 @@
 package at.breitenfellner.popularmovies.model;
 
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.Ignore;
-import android.arch.persistence.room.PrimaryKey;
-import android.provider.BaseColumns;
 import android.support.annotation.NonNull;
 
 import com.squareup.moshi.Json;
@@ -62,7 +57,6 @@ public class Movie {
     /**
      * Constructor for an empty movie
      */
-    @Ignore
     public Movie() {
         isError = false;
     }

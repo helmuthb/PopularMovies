@@ -4,20 +4,21 @@ import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.LifecycleRegistryOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.CollapsingToolbarLayout;
+import android.support.design.widget.CoordinatorLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -31,18 +32,25 @@ import at.breitenfellner.popularmovies.model.TrailerList;
 import at.breitenfellner.popularmovies.viewmodel.MovieDetailsViewModel;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import retrofit2.http.Path;
 
 /**
  * This activity displays a selected movie chosen by the user.
  * The information which movie was selected is hold in a ViewModel and will therefore
  * survive rotation of the screen.
+ * There was an issue with retaining the scroll position after rotation.
+ * This was solved with the answer here: https://stackoverflow.com/a/39154266/813725
  */
 public class MovieDetailsActivity extends AppCompatActivity
         implements LifecycleRegistryOwner, TrailerAdapter.TrailerClickListener {
     private final LifecycleRegistry mLifecycleRegistry = new LifecycleRegistry(this);
     private MovieDetailsViewModel viewModel;
 
+    @BindView(R.id.movie_details)
+    CoordinatorLayout coordinatorLayout;
+    @BindView(R.id.movie_details_appbar_layout)
+    AppBarLayout appBarLayout;
+    @BindView(R.id.movie_details_scroll)
+    View scrollView;
     @BindView(R.id.movie_details_release_date)
     TextView textviewReleaseDate;
     @BindView(R.id.movie_details_vote_average)
@@ -65,6 +73,7 @@ public class MovieDetailsActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         String movieId;
         super.onCreate(savedInstanceState);
+        // load and initialize views
         setContentView(R.layout.activity_movie_details);
         ButterKnife.bind(this);
         // set toolbar
